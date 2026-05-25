@@ -1,43 +1,40 @@
 import { query } from '../services/db.js';
-import { createAssignmentSchema, assignmentQuerySchema } from '../validators/assignments.js';
 import { uuidParamSchema } from '../validators/clients.js';
 
 // ─── GET /api/assignments ───────────────────────────────────
-// Query: ?employee_id=... or ?client_id=... (admin only)
+// Query: ?manager_id=... or ?client_id=... (admin only)
 export async function listAssignments(req, res) {
-    const parsed = assignmentQuerySchema.safeParse(req.query);
-    if (!parsed.success) {
-        return res.status(400).json({ error: 'Invalid query parameters' });
-    }
+    const manager_id = req.query.manager_id;
+    const client_id = req.query.client_id;
 
     const conditions = [];
     const values = [];
     let i = 1;
 
-    if (parsed.data.employee_id) {
-        conditions.push(`eca.employee_id = $${i}`);
-        values.push(parsed.data.employee_id);
+    if (manager_id) {
+        conditions.push(`mca.manager_id = $${i}`);
+        values.push(manager_id);
         i++;
     }
-    if (parsed.data.client_id) {
-        conditions.push(`eca.client_id = $${i}`);
-        values.push(parsed.data.client_id);
+    if (client_id) {
+        conditions.push(`mca.client_id = $${i}`);
+        values.push(client_id);
         i++;
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const result = await query(
-        `SELECT eca.id, eca.employee_id, eca.client_id, eca.assigned_at,
-                u.name AS employee_name, u.email AS employee_email,
+        `SELECT mca.id, mca.manager_id, mca.client_id, mca.assigned_at,
+                u.name AS manager_name, u.email AS manager_email,
                 c.name AS client_name,
                 assigner.name AS assigned_by_name
-         FROM employee_client_assignments eca
-         JOIN users u ON u.id = eca.employee_id
-         JOIN clients c ON c.id = eca.client_id
-         LEFT JOIN users assigner ON assigner.id = eca.assigned_by
+         FROM manager_client_assignments mca
+         JOIN users u ON u.id = mca.manager_id
+         JOIN clients c ON c.id = mca.client_id
+         LEFT JOIN users assigner ON assigner.id = mca.assigned_by
          ${where}
-         ORDER BY eca.assigned_at DESC`,
+         ORDER BY mca.assigned_at DESC`,
         values
     );
 
@@ -45,25 +42,23 @@ export async function listAssignments(req, res) {
 }
 
 // ─── POST /api/assignments ──────────────────────────────────
-// Assign a client to an employee (admin only)
+// Assign a client to a manager (admin only)
 export async function createAssignment(req, res) {
-    const parsed = createAssignmentSchema.safeParse(req.body);
-    if (!parsed.success) {
-        return res.status(400).json({ error: 'Invalid input', details: parsed.error.flatten().fieldErrors });
+    const { manager_id, client_id } = req.body;
+    if (!manager_id || !client_id) {
+        return res.status(400).json({ error: 'manager_id and client_id are required' });
     }
 
-    const { employee_id, client_id } = parsed.data;
-
-    // Verify the user is actually an employee
-    const empCheck = await query(
+    // Verify the user is actually a manager
+    const managerCheck = await query(
         `SELECT id, role FROM users WHERE id = $1 AND is_active = true`,
-        [employee_id]
+        [manager_id]
     );
-    if (empCheck.rows.length === 0) {
-        return res.status(404).json({ error: 'Employee not found' });
+    if (managerCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Manager not found' });
     }
-    if (empCheck.rows[0].role !== 'employee') {
-        return res.status(400).json({ error: 'User is not an employee' });
+    if (managerCheck.rows[0].role !== 'manager') {
+        return res.status(400).json({ error: 'User is not a manager' });
     }
 
     // Verify the client exists
@@ -77,37 +72,37 @@ export async function createAssignment(req, res) {
 
     // Check if already assigned
     const existing = await query(
-        `SELECT id FROM employee_client_assignments WHERE employee_id = $1 AND client_id = $2`,
-        [employee_id, client_id]
+        `SELECT id FROM manager_client_assignments WHERE manager_id = $1 AND client_id = $2`,
+        [manager_id, client_id]
     );
     if (existing.rows.length > 0) {
-        return res.status(409).json({ error: 'Client is already assigned to this employee' });
+        return res.status(409).json({ error: 'Client is already assigned to this manager' });
     }
 
     const result = await query(
-        `INSERT INTO employee_client_assignments (employee_id, client_id, assigned_by)
+        `INSERT INTO manager_client_assignments (manager_id, client_id, assigned_by)
          VALUES ($1, $2, $3)
-         RETURNING id, employee_id, client_id, assigned_at`,
-        [employee_id, client_id, req.user.user_id]
+         RETURNING id, manager_id, client_id, assigned_at`,
+        [manager_id, client_id, req.user.user_id]
     );
 
     return res.status(201).json({
         assignment: result.rows[0],
-        message: 'Client assigned to employee successfully',
+        message: 'Client assigned to manager successfully',
     });
 }
 
 // ─── DELETE /api/assignments/:id ────────────────────────────
-// Unassign a client from an employee (admin only)
+// Unassign a client from a manager (admin only)
 export async function deleteAssignment(req, res) {
     const idParsed = uuidParamSchema.safeParse(req.params.id);
     if (!idParsed.success) return res.status(400).json({ error: 'Invalid assignment ID' });
 
     const result = await query(
-        `DELETE FROM employee_client_assignments WHERE id = $1 RETURNING id`,
+        `DELETE FROM manager_client_assignments WHERE id = $1 RETURNING id`,
         [idParsed.data]
     );
 
     if (result.rows.length === 0) return res.status(404).json({ error: 'Assignment not found' });
-    return res.json({ message: 'Client unassigned from employee' });
+    return res.json({ message: 'Client unassigned from manager' });
 }

@@ -20,35 +20,35 @@ import {
 export async function listClients(req, res) {
     const role = req.user.role;
 
-    // Employee — only show assigned clients
-    if (role === 'employee') {
+    // Manager or Employee — only show assigned clients
+    if (role === 'employee' || role === 'manager') {
         const assignedIds = req.assignedClientIds || [];
         if (assignedIds.length === 0) {
             return res.json({ clients: [] });
         }
-        // Build parameterised IN clause
-        const placeholders = assignedIds.map((_, idx) => `$${idx + 1}`).join(', ');
         const result = await query(
             `SELECT c.id, c.name, c.industry, c.monthly_budget, c.onboarding_status, c.created_at,
                 COALESCE(SUM(cm.spend), 0) AS total_spend,
                 COALESCE(SUM(cm.leads), 0) AS total_leads,
+                COALESCE(SUM(cm.revenue), 0) AS total_revenue,
                 COUNT(DISTINCT camp.id)    AS campaign_count
              FROM clients c
              LEFT JOIN campaigns camp ON camp.client_id = c.id
              LEFT JOIN campaign_metrics cm ON cm.client_id = c.id
-             WHERE c.is_active = true AND c.id IN (${placeholders})
+             WHERE c.is_active = true AND c.id = ANY($1::uuid[])
              GROUP BY c.id
              ORDER BY c.created_at DESC`,
-            assignedIds
+            [assignedIds]
         );
         return res.json({ clients: result.rows });
     }
 
-    // Admin/manager — show all clients
+    // Admin — show all clients
     const result = await query(
         `SELECT c.id, c.name, c.industry, c.monthly_budget, c.onboarding_status, c.created_at,
             COALESCE(SUM(cm.spend), 0) AS total_spend,
             COALESCE(SUM(cm.leads), 0) AS total_leads,
+            COALESCE(SUM(cm.revenue), 0) AS total_revenue,
             COUNT(DISTINCT camp.id)    AS campaign_count
      FROM clients c
      LEFT JOIN campaigns camp ON camp.client_id = c.id
@@ -65,8 +65,8 @@ export async function getClient(req, res) {
     const idParsed = uuidParamSchema.safeParse(req.params.id);
     if (!idParsed.success) return res.status(400).json({ error: 'Invalid client ID' });
 
-    // Employee scope check — :id param isn't available to scopeGuard middleware
-    if (req.user.role === 'employee') {
+    // Manager/Employee scope check — :id param isn't available to scopeGuard middleware
+    if (req.user.role === 'employee' || req.user.role === 'manager') {
         const assignedIds = req.assignedClientIds || [];
         if (!assignedIds.includes(idParsed.data)) {
             return res.status(403).json({ error: 'Access denied — client not assigned to you' });
@@ -234,6 +234,14 @@ export async function connectPlatform(req, res) {
     const idParsed = uuidParamSchema.safeParse(req.params.id);
     if (!idParsed.success) return res.status(400).json({ error: 'Invalid client ID' });
 
+    // Manager/Employee scope check
+    if (req.user.role === 'employee' || req.user.role === 'manager') {
+        const assignedIds = req.assignedClientIds || [];
+        if (!assignedIds.includes(idParsed.data)) {
+            return res.status(403).json({ error: 'Access denied — client not assigned to you' });
+        }
+    }
+
     const platformParsed = platformParamSchema.safeParse(req.params.platform);
     if (!platformParsed.success) return res.status(400).json({ error: 'Invalid platform' });
 
@@ -318,6 +326,14 @@ export async function getOnboardingStatus(req, res) {
     const idParsed = uuidParamSchema.safeParse(req.params.id);
     if (!idParsed.success) return res.status(400).json({ error: 'Invalid client ID' });
 
+    // Manager/Employee scope check
+    if (req.user.role === 'employee' || req.user.role === 'manager') {
+        const assignedIds = req.assignedClientIds || [];
+        if (!assignedIds.includes(idParsed.data)) {
+            return res.status(403).json({ error: 'Access denied — client not assigned to you' });
+        }
+    }
+
     const client = await query(
         `SELECT onboarding_status FROM clients WHERE id = $1 AND is_active = true`,
         [idParsed.data]
@@ -339,6 +355,14 @@ export async function getOnboardingStatus(req, res) {
 export async function updateOnboardingStatus(req, res) {
     const idParsed = uuidParamSchema.safeParse(req.params.id);
     if (!idParsed.success) return res.status(400).json({ error: 'Invalid client ID' });
+
+    // Manager/Employee scope check
+    if (req.user.role === 'employee' || req.user.role === 'manager') {
+        const assignedIds = req.assignedClientIds || [];
+        if (!assignedIds.includes(idParsed.data)) {
+            return res.status(403).json({ error: 'Access denied — client not assigned to you' });
+        }
+    }
 
     const parsed = updateOnboardingStatusSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: 'Invalid input' });

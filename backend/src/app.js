@@ -48,7 +48,7 @@ protectedRouter.use(scopeGuard);
 
 // Agency-side resources
 protectedRouter.use('/clients', requireRole('admin', 'manager', 'employee'), clientRoutes);
-protectedRouter.use('/sync', requireRole('admin', 'manager', 'employee'), syncRoutes);
+protectedRouter.use('/sync', requireRole('admin', 'manager', 'employee', 'client'), syncRoutes);
 protectedRouter.use('/assignments', requireRole('admin'), assignmentRoutes);
 
 // All authenticated roles (scoping handled internally by controllers)

@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { Screen1Login } from "./components/screens/Screen1Login";
-import { Screen3AgencyDashboard } from "./components/screens/Screen3AgencyDashboard";
-import { Screen4AddClient } from "./components/screens/Screen4AddClient";
-import { Screen5ClientDashboard } from "./components/screens/Screen5ClientDashboard";
-import { Screen6EmployeeDashboard } from "./components/screens/Screen6EmployeeDashboard";
+import { Login } from "./components/screens/auth/Login";
+import { MainDashboard } from "./components/screens/dashboards/MainDashboard";
+import { AddClient } from "./components/screens/clients/AddClient";
+import { ClientDashboard } from "./components/screens/dashboards/ClientDashboard";
+
 import { ReactNode } from "react";
 
 /**
@@ -47,8 +47,9 @@ function AuthGuard({
 function getDashboardPath(role: string): string {
     switch (role) {
         case "admin":
-        case "manager":
             return "/agency/dashboard";
+        case "manager":
+            return "/manager/dashboard";
         case "employee":
             return "/employee/dashboard";
         case "client":
@@ -81,41 +82,48 @@ function AppRoutes() {
             <main className="flex-1 overflow-auto">
                 <Routes>
                     <Route path="/" element={<SmartRedirect />} />
-                    <Route path="/login" element={<Screen1Login />} />
+                    <Route path="/login" element={<Login />} />
 
                     {/* Admin routes */}
-                    <Route
-                        path="/agency/dashboard"
-                        element={
-                            <AuthGuard allowedRoles={["admin", "manager"]}>
-                                <Screen3AgencyDashboard />
-                            </AuthGuard>
-                        }
-                    />
                     <Route
                         path="/agency/add-client"
                         element={
                             <AuthGuard allowedRoles={["admin"]}>
-                                <Screen4AddClient />
+                                <AddClient />
                             </AuthGuard>
                         }
                     />
-
                     <Route
-                        path="/employee/dashboard"
+                        path="/agency/:tab?"
+                        element={
+                            <AuthGuard allowedRoles={["admin"]}>
+                                <MainDashboard />
+                            </AuthGuard>
+                        }
+                    />
+                    <Route
+                        path="/manager/:tab?"
+                        element={
+                            <AuthGuard allowedRoles={["manager"]}>
+                                <MainDashboard />
+                            </AuthGuard>
+                        }
+                    />
+                    <Route
+                        path="/employee/:tab?"
                         element={
                             <AuthGuard allowedRoles={["employee"]}>
-                                <Screen6EmployeeDashboard />
+                                <MainDashboard />
                             </AuthGuard>
                         }
                     />
 
                     {/* Client routes */}
                     <Route
-                        path="/client/dashboard"
+                        path="/client/:tab?"
                         element={
                             <AuthGuard allowedRoles={["client"]}>
-                                <Screen5ClientDashboard />
+                                <ClientDashboard />
                             </AuthGuard>
                         }
                     />

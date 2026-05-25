@@ -56,9 +56,17 @@ export async function getAnalyticsReport(req, res) {
         if (clientId) {
             sql += ` AND cm.client_id = $3`;
             params.push(clientId);
+        } else if (req.user.role === 'manager') {
+            sql += ` AND cm.client_id IN (SELECT client_id FROM manager_client_assignments WHERE manager_id = $3)`;
+            params.push(req.user.user_id);
         } else if (req.user.role === 'employee') {
-            sql += ` AND cm.client_id IN (SELECT client_id FROM employee_client_assignments WHERE employee_id = $3)`;
-            params.push(req.user.id);
+            sql += ` AND cm.client_id IN (
+                SELECT DISTINCT c.client_id 
+                FROM campaigns c
+                JOIN employee_campaign_assignments eca ON eca.campaign_id = c.id
+                WHERE eca.employee_id = $3
+            )`;
+            params.push(req.user.user_id);
         }
 
         sql += ` GROUP BY cm.source, c.name, c.status ORDER BY total_spend DESC`;

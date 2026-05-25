@@ -9,12 +9,12 @@ import { query } from '../services/db.js';
  *     - Full access to all clients — passes through any client_id from request
  *
  *   manager:
- *     - Same client visibility as admin
- *     - Admin-only actions are still enforced separately by route guards
+ *     - Can only access clients assigned via manager_client_assignments
+ *     - Loads assigned client IDs on each request and validates
+ *     - Returns 403 if they try to access an unassigned client
  *
  *   employee:
- *     - Can only access clients assigned to them via employee_client_assignments
- *     - Loads assigned client IDs on each request and validates
+ *     - Can only access clients whose campaigns they are assigned to (employee_campaign_assignments)
  *     - Returns 403 if they try to access an unassigned client
  *
  *   client:
@@ -48,19 +48,52 @@ export async function scopeGuard(req, res, next) {
     const role = req.user.role; // Already mapped in verifyToken
 
     // ─── Admin — full access ────────────────────────────────
-    if (role === 'admin' || role === 'manager') {
+    if (role === 'admin') {
         req.scopedClientId = req.params.client_id || req.params.id || req.body?.client_id || req.query?.client_id || null;
         return next();
     }
 
-    // ─── Employee — assigned clients only ───────────────────
+    // ─── Manager — assigned clients only ────────────────────
+    if (role === 'manager') {
+        const requestedClientId =
+            req.params.client_id || req.params.id || req.body?.client_id || req.query?.client_id;
+
+        // Load assigned client IDs for this manager
+        const assignmentResult = await query(
+            `SELECT client_id FROM manager_client_assignments WHERE manager_id = $1`,
+            [req.user.user_id]
+        );
+        const assignedClientIds = assignmentResult.rows.map((r) => r.client_id);
+
+        // Store on request for downstream use
+        req.assignedClientIds = assignedClientIds;
+
+        if (requestedClientId) {
+            if (!assignedClientIds.includes(requestedClientId)) {
+                console.error(
+                    `[SCOPE-GUARD 403] manager user_id=${req.user.user_id} tried to access unassigned client_id=${requestedClientId} at ${new Date().toISOString()}`
+                );
+                return res.status(403).json({ error: 'Access denied — client not assigned to you' });
+            }
+            req.scopedClientId = requestedClientId;
+        } else {
+            // No specific client requested — downstream handlers can use assignedClientIds
+            req.scopedClientId = null;
+        }
+        return next();
+    }
+
+    // ─── Employee — campaigns' assigned clients only ────────
     if (role === 'employee') {
         const requestedClientId =
             req.params.client_id || req.params.id || req.body?.client_id || req.query?.client_id;
 
-        // Load assigned client IDs for this employee
+        // Load assigned client IDs from campaigns assigned to this employee via join table
         const assignmentResult = await query(
-            `SELECT client_id FROM employee_client_assignments WHERE employee_id = $1`,
+            `SELECT DISTINCT c.client_id 
+             FROM campaigns c
+             JOIN employee_campaign_assignments eca ON eca.campaign_id = c.id
+             WHERE eca.employee_id = $1`,
             [req.user.user_id]
         );
         const assignedClientIds = assignmentResult.rows.map((r) => r.client_id);
@@ -73,11 +106,10 @@ export async function scopeGuard(req, res, next) {
                 console.error(
                     `[SCOPE-GUARD 403] employee user_id=${req.user.user_id} tried to access unassigned client_id=${requestedClientId} at ${new Date().toISOString()}`
                 );
-                return res.status(403).json({ error: 'Access denied — client not assigned to you' });
+                return res.status(403).json({ error: 'Access denied — client not assigned to your campaigns' });
             }
             req.scopedClientId = requestedClientId;
         } else {
-            // No specific client requested — downstream handlers can use assignedClientIds
             req.scopedClientId = null;
         }
         return next();

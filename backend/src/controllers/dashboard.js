@@ -2,6 +2,22 @@ import { query } from '../services/db.js';
 
 // ─── GET /api/dashboard/agency ──────────────────────────────
 export async function agencyDashboard(req, res) {
+    // If manager, scope to assigned clients only
+    const assignedIds = req.assignedClientIds;
+    let clientFilter = '';
+    const params = [];
+
+    if (assignedIds && assignedIds.length > 0) {
+        const placeholders = assignedIds.map((_, i) => `$${i + 1}`).join(', ');
+        clientFilter = ` AND c.id IN (${placeholders})`;
+        params.push(...assignedIds);
+    } else if (assignedIds && assignedIds.length === 0 && req.user.role !== 'admin') {
+        // Manager/employee with no assignments
+        return res.json({
+            total_spend: 0, avg_roas: 0, active_clients: 0, total_campaigns: 0, last_synced: null,
+        });
+    }
+
     const result = await query(
         `SELECT
        COALESCE(SUM(cm.spend), 0)       AS total_spend,
@@ -11,15 +27,16 @@ export async function agencyDashboard(req, res) {
      FROM clients c
      LEFT JOIN campaigns camp ON camp.client_id = c.id
      LEFT JOIN campaign_metrics cm ON cm.client_id = c.id
-     WHERE c.is_active = true`
+     WHERE c.is_active = true${clientFilter}`,
+        params
     );
 
-    // Calculate avg ROAS across all clients
     const roasResult = await query(
         `SELECT
        CASE WHEN SUM(spend) > 0 THEN ROUND(SUM(revenue) / SUM(spend), 2) ELSE 0 END AS avg_roas
      FROM campaign_metrics cm
-     JOIN clients c ON c.id = cm.client_id AND c.is_active = true`
+     JOIN clients c ON c.id = cm.client_id AND c.is_active = true${clientFilter}`,
+        params
     );
 
     const row = result.rows[0];
@@ -40,6 +57,12 @@ export async function clientDashboard(req, res) {
     if (req.user.role === 'client') {
         if (requestedClientId && requestedClientId !== req.user.client_id) {
             return res.status(403).json({ error: 'Access denied' });
+        }
+    }
+    if (req.user.role === 'manager') {
+        const assignedIds = req.assignedClientIds || [];
+        if (requestedClientId && !assignedIds.includes(requestedClientId)) {
+            return res.status(403).json({ error: 'Access denied — client not assigned to you' });
         }
     }
     if (req.user.role === 'employee') {

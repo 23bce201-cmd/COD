@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 
 const GOOGLE_IDP_HINT = import.meta.env.VITE_KEYCLOAK_GOOGLE_IDP_HINT || "google";
 
@@ -275,7 +275,7 @@ function MobileLayout() {
   );
 }
 
-export function Screen1Login() {
+export function Login() {
   return (
     <div
       className="min-h-screen w-full"

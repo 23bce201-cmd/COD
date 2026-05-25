@@ -18,10 +18,11 @@ function toAppRole(dbRole) {
 // ─── GET /api/users ─────────────────────────────────────────
 export async function listUsers(req, res) {
     const roleFilter = req.query.role; // Optional: ?role=employee or ?role=manager
-    let sql = `SELECT u.id, u.email, u.name, u.role, u.client_id, u.is_active,
-            u.created_at, u.last_login, c.name AS client_name
+    let sql = `SELECT u.id, u.email, u.name, u.role, u.client_id, u.manager_id, u.is_active,
+            u.created_at, u.last_login, c.name AS client_name, m.name AS manager_name
      FROM users u
-     LEFT JOIN clients c ON c.id = u.client_id`;
+     LEFT JOIN clients c ON c.id = u.client_id
+     LEFT JOIN users m ON m.id = u.manager_id`;
     const values = [];
 
     if (roleFilter) {
@@ -45,10 +46,11 @@ export async function listUsers(req, res) {
 // ─── GET /api/users/me ──────────────────────────────────────
 export async function getMe(req, res) {
     const result = await query(
-        `SELECT u.id, u.email, u.name, u.role, u.client_id, u.is_active,
-            u.created_at, u.last_login, c.name AS client_name
+        `SELECT u.id, u.email, u.name, u.role, u.client_id, u.manager_id, u.is_active,
+            u.created_at, u.last_login, c.name AS client_name, m.name AS manager_name
      FROM users u
      LEFT JOIN clients c ON c.id = u.client_id
+     LEFT JOIN users m ON m.id = u.manager_id
      WHERE u.id = $1`,
         [req.user.user_id]
     );
@@ -60,17 +62,32 @@ export async function getMe(req, res) {
         display_role: toAppRole(result.rows[0].role),
     };
 
-    // For employees, also return assigned clients
-    if (user.role === 'employee') {
+    // For managers, return assigned clients
+    if (user.role === 'manager') {
         const assignments = await query(
-            `SELECT eca.id AS assignment_id, c.id AS client_id, c.name AS client_name, eca.assigned_at
-             FROM employee_client_assignments eca
-             JOIN clients c ON c.id = eca.client_id AND c.is_active = true
-             WHERE eca.employee_id = $1
-             ORDER BY eca.assigned_at DESC`,
+            `SELECT mca.id AS assignment_id, c.id AS client_id, c.name AS client_name, mca.assigned_at
+             FROM manager_client_assignments mca
+             JOIN clients c ON c.id = mca.client_id AND c.is_active = true
+             WHERE mca.manager_id = $1
+             ORDER BY mca.assigned_at DESC`,
             [req.user.user_id]
         );
         user.assigned_clients = assignments.rows;
+    }
+
+    // For employees, return assigned campaigns (and their clients)
+    if (user.role === 'employee') {
+        const campaigns = await query(
+            `SELECT c.id AS campaign_id, c.name AS campaign_name, c.platform, c.status,
+                    cl.id AS client_id, cl.name AS client_name
+             FROM campaigns c
+             JOIN clients cl ON cl.id = c.client_id AND cl.is_active = true
+             JOIN employee_campaign_assignments eca ON eca.campaign_id = c.id
+             WHERE eca.employee_id = $1
+             ORDER BY c.created_at DESC`,
+            [req.user.user_id]
+        );
+        user.assigned_campaigns = campaigns.rows;
     }
 
     return res.json({ user });
@@ -89,7 +106,7 @@ export async function createUser(req, res) {
         return res.status(400).json({ error: 'Invalid input', details: parsed.error.flatten().fieldErrors });
     }
 
-    const { email, name, role } = parsed.data;
+    const { email, name, role, manager_id } = parsed.data;
 
     // Check existing
     const existing = await query(`SELECT id FROM users WHERE email = $1`, [email]);
@@ -124,10 +141,10 @@ export async function createUser(req, res) {
     let result;
     try {
         result = await query(
-            `INSERT INTO users (email, role, name, keycloak_user_id)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, email, name, role`,
-            [email, role, name, provisioned.id]
+            `INSERT INTO users (email, role, name, keycloak_user_id, manager_id)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, email, name, role, manager_id`,
+            [email, role, name, provisioned.id, manager_id || null]
         );
     } catch (err) {
         await deleteKeycloakUser(provisioned.id);
@@ -177,7 +194,7 @@ export async function updateUser(req, res) {
     if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' });
 
     const existingResult = await query(
-        `SELECT id, email, name, role, is_active, keycloak_user_id
+        `SELECT id, email, name, role, is_active, keycloak_user_id, manager_id
          FROM users
          WHERE id = $1`,
         [idParsed.data]
@@ -200,7 +217,7 @@ export async function updateUser(req, res) {
 
     values.push(idParsed.data);
     const result = await query(
-        `UPDATE users SET ${fields.join(', ')} WHERE id = $${i} RETURNING id, email, name, role, is_active`,
+        `UPDATE users SET ${fields.join(', ')} WHERE id = $${i} RETURNING id, email, name, role, manager_id, is_active`,
         values
     );
 

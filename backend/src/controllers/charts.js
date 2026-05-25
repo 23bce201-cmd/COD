@@ -54,15 +54,30 @@ export async function agencySpend(req, res) {
     const from = req.query.from || '1970-01-01';
     const to = req.query.to || '2099-12-31';
 
-    const result = await query(
-        `SELECT source AS platform,
+    let sql = `
+        SELECT source AS platform,
             COALESCE(SUM(spend), 0) AS spend
-     FROM campaign_metrics cm
-     JOIN clients c ON c.id = cm.client_id AND c.is_active = true
-     WHERE cm.date >= $1 AND cm.date <= $2
-     GROUP BY source ORDER BY spend DESC`,
-        [from, to]
-    );
+        FROM campaign_metrics cm
+        JOIN clients c ON c.id = cm.client_id AND c.is_active = true
+        WHERE cm.date >= $1 AND cm.date <= $2
+    `;
+    const params = [from, to];
+    let i = 3;
+
+    if (req.user.role === 'manager' || req.user.role === 'employee') {
+        if (!req.assignedClientIds || req.assignedClientIds.length === 0) {
+            return res.json({ data: [] });
+        }
+        sql += ` AND cm.client_id = ANY($${i}::uuid[])`;
+        params.push(req.assignedClientIds);
+    } else if (req.user.role === 'client') {
+        sql += ` AND cm.client_id = $${i}`;
+        params.push(req.user.client_id);
+    }
+
+    sql += ` GROUP BY source ORDER BY spend DESC`;
+
+    const result = await query(sql, params);
 
     return res.json({ data: result.rows });
 }

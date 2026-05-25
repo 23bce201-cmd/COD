@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 
 const STEPS = ["Client Details", "Connect Platforms", "Done"] as const;
 const PLATFORM_ORDER = ["google_ads", "meta_ads", "mailchimp"] as const;
@@ -183,7 +183,7 @@ function friendlyError(payload: any, fallback: string) {
   return fallback;
 }
 
-export function Screen4AddClient() {
+export function AddClient() {
   const navigate = useNavigate();
   const { apiFetch } = useAuth();
 

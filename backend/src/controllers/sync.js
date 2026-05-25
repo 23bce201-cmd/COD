@@ -487,17 +487,44 @@ export async function getSyncLogs(req, res) {
 
 // GET /api/sync/all-logs
 export async function getAllSyncLogs(req, res) {
-    if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+    const role = req.user.role;
+    
+    let queryStr = `
+        SELECT DISTINCT ON (c.name, sl.platform)
+            sl.id, sl.platform, sl.status, sl.records_synced, sl.error_message, sl.synced_at, c.name as client_name, c.id as client_id
+        FROM sync_logs sl
+        JOIN clients c ON c.id = sl.client_id
+    `;
+    const params = [];
+
+    if (role === 'admin') {
+        // Full access, no where clause needed
+    } else if (role === 'manager') {
+        if (!req.assignedClientIds || req.assignedClientIds.length === 0) {
+            return res.json({ logs: [] });
+        }
+        queryStr += ` WHERE c.id = ANY($1::uuid[])`;
+        params.push(req.assignedClientIds);
+    } else if (role === 'employee') {
+        queryStr += ` 
+            WHERE EXISTS (
+                SELECT 1 FROM campaigns emp_c 
+                JOIN employee_campaign_assignments emp_eca ON emp_eca.campaign_id = emp_c.id 
+                WHERE emp_c.client_id = c.id 
+                AND emp_c.platform::text = sl.platform::text 
+                AND emp_eca.employee_id = $1
+            )
+        `;
+        params.push(req.user.user_id);
+    } else if (role === 'client') {
+        queryStr += ` WHERE c.id = $1`;
+        params.push(req.user.client_id);
+    } else {
         return res.status(403).json({ error: 'Access denied' });
     }
 
-    const result = await query(
-        `SELECT DISTINCT ON (c.name, sl.platform)
-            sl.id, sl.platform, sl.status, sl.records_synced, sl.error_message, sl.synced_at, c.name as client_name, c.id as client_id
-         FROM sync_logs sl
-         JOIN clients c ON c.id = sl.client_id
-         ORDER BY c.name, sl.platform, sl.synced_at DESC`
-    );
+    queryStr += ` ORDER BY c.name, sl.platform, sl.synced_at DESC`;
 
+    const result = await query(queryStr, params);
     return res.json({ logs: result.rows });
 }

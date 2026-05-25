@@ -6,6 +6,7 @@ export const createUserSchema = z.object({
     role: z.enum(['manager', 'employee'], {
         errorMap: () => ({ message: "Role must be 'manager' or 'employee'" }),
     }),
+    manager_id: z.string().uuid().nullable().optional(),
     password: z
         .string()
         .min(8)
@@ -21,5 +22,6 @@ export const updateUserSchema = z.object({
     name: z.string().min(1).max(255).trim().optional(),
     email: z.string().email().max(255).trim().toLowerCase().optional(),
     role: z.enum(['manager', 'employee']).optional(),
+    manager_id: z.string().uuid().nullable().optional(),
     is_active: z.boolean().optional(),
 });
