@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Login } from "./components/screens/auth/Login";
-import { MainDashboard } from "./components/screens/dashboards/MainDashboard";
+import { AdminDashboard } from "./components/screens/dashboards/AdminDashboard";
+import { EmployeeDashboard } from "./components/screens/dashboards/EmployeeDashboard";
 import { ClientDashboard } from "./components/screens/dashboards/ClientDashboard";
+import { ManagerDashboard } from "./components/screens/dashboards/ManagerDashboard";
 import { PageSpinner } from "./components/ui/LoadingSkeletons";
+import { Toaster } from "./components/ui/sonner";
 
 import { ReactNode } from "react";
 
@@ -43,7 +46,7 @@ function AuthGuard({
 function getDashboardPath(role: string): string {
     switch (role) {
         case "admin":
-            return "/agency/dashboard";
+            return "/admin/dashboard";
         case "manager":
             return "/manager/dashboard";
         case "employee":
@@ -76,33 +79,41 @@ function AppRoutes() {
 
                     {/* Admin routes */}
                     <Route
-                        path="/agency/:tab?"
+                        path="/admin/*"
                         element={
                             <AuthGuard allowedRoles={["admin"]}>
-                                <MainDashboard />
+                                <AdminDashboard />
                             </AuthGuard>
                         }
                     />
                     <Route
-                        path="/manager/:tab?"
+                        path="/agency/*"
+                        element={
+                            <AuthGuard allowedRoles={["admin"]}>
+                                <Navigate to="/admin/dashboard" replace />
+                            </AuthGuard>
+                        }
+                    />
+                    <Route
+                        path="/manager/*"
                         element={
                             <AuthGuard allowedRoles={["manager"]}>
-                                <MainDashboard />
+                                <ManagerDashboard />
                             </AuthGuard>
                         }
                     />
                     <Route
-                        path="/employee/:tab?"
+                        path="/employee/*"
                         element={
                             <AuthGuard allowedRoles={["employee"]}>
-                                <MainDashboard />
+                                <EmployeeDashboard />
                             </AuthGuard>
                         }
                     />
 
                     {/* Client routes */}
                     <Route
-                        path="/client/:tab?"
+                        path="/client/*"
                         element={
                             <AuthGuard allowedRoles={["client"]}>
                                 <ClientDashboard />
@@ -122,6 +133,7 @@ export default function App() {
         <AuthProvider>
             <BrowserRouter>
                 <AppRoutes />
+                <Toaster />
             </BrowserRouter>
         </AuthProvider>
     );
