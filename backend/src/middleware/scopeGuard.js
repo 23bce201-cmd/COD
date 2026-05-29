@@ -57,6 +57,14 @@ export async function scopeGuard(req, res, next) {
     if (role === 'manager') {
         const requestedClientId =
             req.params.client_id || req.params.id || req.body?.client_id || req.query?.client_id;
+        const requestedManagerId = req.body?.manager_id || req.query?.manager_id;
+
+        if (requestedManagerId && requestedManagerId !== req.user.user_id) {
+            console.error(
+                `[SCOPE-GUARD 403] manager user_id=${req.user.user_id} tried to use manager_id=${requestedManagerId} at ${new Date().toISOString()}`
+            );
+            return res.status(403).json({ error: 'Access denied' });
+        }
 
         // Load assigned client IDs for this manager
         const assignmentResult = await query(
@@ -67,6 +75,7 @@ export async function scopeGuard(req, res, next) {
 
         // Store on request for downstream use
         req.assignedClientIds = assignedClientIds;
+        req.managerId = req.user.user_id;
 
         if (requestedClientId) {
             if (!assignedClientIds.includes(requestedClientId)) {

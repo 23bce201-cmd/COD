@@ -23,6 +23,7 @@ export const updateCampaignSchema = z.object({
 
 export const campaignQuerySchema = z.object({
     client_id: z.string().uuid().optional(),
+    employee_id: z.string().uuid().optional(),
     platform: z.enum(['google_ads', 'meta_ads', 'mailchimp', 'manual']).optional(),
     status: z.enum(['active', 'paused', 'completed']).optional(),
     from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
