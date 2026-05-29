@@ -70,6 +70,17 @@ export async function listClients(req, res) {
         return res.json({ clients: result.rows });
     }
 
+    // Client — only show their own client record
+    if (role === 'client') {
+        const result = await query(
+            `${CLIENTS_WITH_STATS_SQL}
+             WHERE c.is_active = true AND c.id = $1
+             ORDER BY c.created_at DESC`,
+            [req.user.client_id]
+        );
+        return res.json({ clients: result.rows });
+    }
+
     // Admin — show all clients
     const result = await query(
         `${CLIENTS_WITH_STATS_SQL}

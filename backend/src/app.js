@@ -47,7 +47,7 @@ protectedRouter.use(verifyToken);
 protectedRouter.use(scopeGuard);
 
 // Agency-side resources
-protectedRouter.use('/clients', requireRole('admin', 'manager', 'employee'), clientRoutes);
+protectedRouter.use('/clients', requireRole('admin', 'manager', 'employee', 'client'), clientRoutes);
 protectedRouter.use('/sync', requireRole('admin', 'manager', 'employee', 'client'), syncRoutes);
 protectedRouter.use('/assignments', requireRole('admin'), assignmentRoutes);
 
