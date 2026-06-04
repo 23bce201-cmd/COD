@@ -13,6 +13,7 @@ import userRoutes from './routes/users.js';
 import assignmentRoutes from './routes/assignments.js';
 import emailRoutes from './routes/email.js';
 import { handleGmailOAuthCallback } from './controllers/reportEmails.js';
+import kanbanRoutes from './routes/kanban.js';
 
 import { verifyToken } from './middleware/verifyToken.js';
 import { scopeGuard, requireRole } from './middleware/scopeGuard.js';
@@ -63,6 +64,7 @@ protectedRouter.use('/dashboard', dashboardRoutes);
 protectedRouter.use('/charts', chartRoutes);
 protectedRouter.use('/reports', reportRoutes);
 protectedRouter.use('/email', emailRoutes);
+protectedRouter.use('/kanban', kanbanRoutes);
 protectedRouter.use('/users', userRoutes);
 
 app.use('/api', protectedRouter);

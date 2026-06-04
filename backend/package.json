@@ -12,7 +12,10 @@
         "migrate:keycloak:cleanup": "node db/run_005_migration.js",
         "migrate:manager-role": "node db/run_006_migration.js",
         "migrate:sent-emails": "node db/run_010_migration.js",
-        "migrate:gmail-connections": "node db/run_011_migration.js"
+        "migrate:gmail-connections": "node db/run_011_migration.js",
+         "migrate:kanban": "node db/run_010_migration.js",
+        "migrate:kanban-campaign": "node db/run_011_migration.js",
+        "seed:kanban": "node db/seed_kanban_deals.js"
     },
     "dependencies": {
         "cors": "^2.8.5",

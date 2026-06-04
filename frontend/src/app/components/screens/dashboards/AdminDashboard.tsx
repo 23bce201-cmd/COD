@@ -28,6 +28,7 @@ import {
   ChevronUp,
   Cloud,
   FileBarChart,
+  Kanban as KanbanIcon,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -48,6 +49,7 @@ import { EmailCenter } from "../email/EmailCenter";
 import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
 import { TeamAccess } from "../team/TeamAccess";
+import { KanbanBoard } from "../kanban/KanbanBoard";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
 import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -597,6 +599,7 @@ function AdminBreadcrumbs({ clients, campaigns }: { clients: AdminClient[]; camp
   const flatLabels: Record<string, string> = {
     clients: "All Clients",
     campaigns: "Campaigns",
+    kanban: "Kanban Board",
     reports: "Reports",
     "sync-status": "Sync Status",
     "team-access": "Team & Access",
@@ -1844,6 +1847,7 @@ function AdminContentRoutes({
         <Route path="dashboard" element={<AdminOverview clients={clients} campaigns={campaigns} assignments={assignments} loading={loading} search={search} />} />
         <Route path="clients" element={<AdminOverview clients={clients} campaigns={campaigns} assignments={assignments} loading={loading} search={search} clientsOnly />} />
         <Route path="campaigns" element={<AllCampaignsPage campaigns={campaigns} loading={loading} search={search} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
+        <Route path="kanban" element={<KanbanBoard search={search} />} />
         <Route path="campaigns/compare" element={<RoleCampaignComparisonPage campaigns={campaigns} selectedIds={selectedIds} apiFetch={apiFetch} buildDetailPath={(campaignId) => `/api/campaigns/${campaignId}`} backPath="/admin/campaigns" onClear={onClearCompare} />} />
         <Route path="clients/:clientId" element={<ClientPage clients={clients} campaigns={campaigns} assignments={assignments} clientsLoading={loading} search={search} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage clients={clients} assignments={assignments} />} />
@@ -1895,6 +1899,7 @@ function DesktopShell({
   const navItems = [
     { label: "Dashboard", path: "/admin/dashboard", icon: LayoutDashboard },
     { label: "Clients", path: "/admin/clients", icon: Users },
+    { label: "Kanban", path: "/admin/kanban", icon: KanbanIcon },
     { label: "Campaigns", path: "/admin/campaigns", icon: Megaphone },
     { label: "Reports", path: "/admin/reports", icon: FileBarChart },
     { label: "Email", path: "/admin/email", icon: Mail },
@@ -2014,6 +2019,7 @@ function MobileShell({
   const tabs = [
     { label: "Home", path: "/admin/dashboard", icon: LayoutDashboard },
     { label: "Clients", path: "/admin/clients", icon: Users },
+    { label: "Board", path: "/admin/kanban", icon: KanbanIcon },
     { label: "Managers", path: "/admin/managers", icon: UserRound },
     { label: "Email", path: "/admin/email", icon: Mail },
     { label: "Settings", path: "/admin/settings", icon: Settings },
