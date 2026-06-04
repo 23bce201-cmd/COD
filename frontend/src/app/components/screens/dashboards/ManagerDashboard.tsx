@@ -1,3 +1,4 @@
+// Manager dashboard shell with scoped client routes, Reports, and Email automation navigation.
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router";
 import {
@@ -28,6 +29,7 @@ import {
   FileBarChart,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   RefreshCw,
   Search,
@@ -38,6 +40,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "../../../context/AuthContext";
 import { Reports } from "../reports/Reports";
+import { EmailCenter } from "../email/EmailCenter";
 import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
@@ -1276,6 +1279,7 @@ function ManagerContentRoutes({
         <Route path="clients/:clientId" element={<ClientPage clients={clients} campaigns={campaigns} clientsLoading={loading} search={search} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage clients={clients} clientsLoading={loading} />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="email" element={<EmailCenter />} />
         <Route path="sync-status" element={mobile ? <SyncStatusM /> : <SyncStatusD />} />
         <Route path="settings" element={mobile ? <SettingsM onLogout={onLogout} /> : <SettingsD />} />
         <Route path="clients" element={<Navigate to="/manager/dashboard" replace />} />
@@ -1312,6 +1316,7 @@ function DesktopShell({
   const navItems: Array<{ label: string; path: string; icon: React.FC<{ size?: number; className?: string }> }> = [
     { label: "Dashboard", path: "/manager/dashboard", icon: LayoutDashboard },
     { label: "Reports", path: "/manager/reports", icon: FileBarChart },
+    { label: "Email", path: "/manager/email", icon: Mail },
     { label: "Sync Status", path: "/manager/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/manager/settings", icon: Settings },
   ];
@@ -1457,6 +1462,7 @@ function MobileShell({
     { label: "Home", path: "/manager/dashboard", icon: LayoutDashboard },
     { label: "Clients", path: firstClientPath, icon: UserRound },
     { label: "Reports", path: "/manager/reports", icon: FileBarChart },
+    { label: "Email", path: "/manager/email", icon: Mail },
     { label: "Sync", path: "/manager/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/manager/settings", icon: Settings },
   ];

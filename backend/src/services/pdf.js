@@ -1,3 +1,4 @@
+// Builds downloadable and attachable PDF report documents for CloudCRM reports.
 import PDFDocument from 'pdfkit';
 import { query } from './db.js';
 
@@ -338,13 +339,14 @@ function normalizeCampaignRows(rows) {
 }
 
 /**
- * Generate a PDF performance report for a client and pipe it to the response.
+ * Render a PDF performance report and let the caller decide where it streams.
  * @param {string|null} clientId
  * @param {string} from  ISO date string
  * @param {string} to    ISO date string
- * @param {import('express').Response} res
+ * @param {object} options
+ * @param {(doc: PDFDocument, meta: object) => void} attachDocument
  */
-export async function generateClientReport(clientId, from, to, res, options = {}) {
+async function renderClientReportPdf(clientId, from, to, options = {}, attachDocument) {
     const reportTitle = options.title || 'Performance Report';
     const scope = options.scope || {};
     const isSingleClient = Boolean(clientId);
@@ -471,9 +473,8 @@ export async function generateClientReport(clientId, from, to, res, options = {}
         layout: 'landscape',
     });
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName(client.name)}_${safeFileName(reportTitle)}.pdf"`);
-    doc.pipe(res);
+    const filename = `${safeFileName(client.name)}_${safeFileName(reportTitle)}.pdf`;
+    attachDocument(doc, { filename, client, summary });
 
     // Cover
     doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLORS.dark);
@@ -566,4 +567,50 @@ export async function generateClientReport(clientId, from, to, res, options = {}
     }
 
     doc.end();
+
+    return {
+        filename,
+        clientName: client.name,
+        summary,
+        rowCount: campaignRows.length,
+        platformCount: platformRows.length,
+    };
+}
+
+/**
+ * Generate a PDF performance report for a client and pipe it to the response.
+ */
+export async function generateClientReport(clientId, from, to, res, options = {}) {
+    return renderClientReportPdf(clientId, from, to, options, (doc, { filename }) => {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        doc.pipe(res);
+    });
+}
+
+/**
+ * Generate the same report as a buffer so it can be attached to outbound email.
+ */
+export async function generateClientReportBuffer(clientId, from, to, options = {}) {
+    const chunks = [];
+    let finished;
+
+    const result = await renderClientReportPdf(clientId, from, to, options, (doc) => {
+        finished = new Promise((resolve, reject) => {
+            doc.on('data', (chunk) => chunks.push(chunk));
+            doc.on('end', resolve);
+            doc.on('error', reject);
+        });
+    });
+
+    if (!finished) {
+        throw new Error('PDF stream was not initialized');
+    }
+
+    await finished;
+
+    return {
+        ...result,
+        buffer: Buffer.concat(chunks),
+    };
 }

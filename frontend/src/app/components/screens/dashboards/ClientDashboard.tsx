@@ -1,3 +1,4 @@
+// Client dashboard shell with campaign routes, Reports, and Email automation navigation.
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
@@ -31,6 +32,7 @@ import {
   GripVertical,
   LayoutDashboard,
   LogOut,
+  Mail,
   Maximize2,
   Megaphone,
   Menu,
@@ -44,6 +46,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "../../../context/AuthContext";
 import { Reports } from "../reports/Reports";
+import { EmailCenter } from "../email/EmailCenter";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
 import { Card } from "../../ui/card";
@@ -2474,6 +2477,7 @@ function ClientContentRoutes({
         <Route path="campaigns/compare" element={<CampaignComparisonPage campaigns={campaigns} clientId={clientId} selectedIds={selectedIds} clearSelection={clearSelection} />} />
         <Route path="campaigns/:campaignId" element={<CampaignDetailPage campaigns={campaigns} clientId={clientId} layout={layout} setLayout={setLayout} />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="email" element={<EmailCenter />} />
         <Route path="sync-status" element={mobile ? <SyncStatusM /> : <SyncStatusD />} />
         <Route path="*" element={<Navigate to="/client/dashboard" replace />} />
       </Routes>
@@ -2511,6 +2515,7 @@ function DesktopShell({
     { label: "Dashboard", path: "/client/dashboard", icon: LayoutDashboard },
     { label: "Campaigns", path: "/client/campaigns", icon: Megaphone, count: campaigns.length },
     { label: "Reports", path: "/client/reports", icon: FileBarChart },
+    { label: "Email", path: "/client/email", icon: Mail },
     { label: "Sync Status", path: "/client/sync-status", icon: RefreshCw },
   ];
 
@@ -2636,6 +2641,7 @@ function MobileShell({
     { label: "Home", path: "/client/dashboard", icon: LayoutDashboard },
     { label: "Campaigns", path: "/client/campaigns", icon: BarChart3 },
     { label: "Reports", path: "/client/reports", icon: FileBarChart },
+    { label: "Email", path: "/client/email", icon: Mail },
     { label: "Sync", path: "/client/sync-status", icon: RefreshCw },
   ];
 

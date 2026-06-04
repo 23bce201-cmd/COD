@@ -1,3 +1,4 @@
+// Employee dashboard shell with assigned campaign routes, Reports, and Email automation navigation.
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router";
 import {
@@ -24,6 +25,7 @@ import {
   FileBarChart,
   LayoutDashboard,
   LogOut,
+  Mail,
   Megaphone,
   Menu,
   RefreshCw,
@@ -33,6 +35,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "../../../context/AuthContext";
 import { Reports } from "../reports/Reports";
+import { EmailCenter } from "../email/EmailCenter";
 import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
@@ -1247,6 +1250,7 @@ function EmployeeContentRoutes({
         <Route path="clients/:clientId" element={<ClientPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="email" element={<EmailCenter />} />
         <Route path="sync-status" element={<SyncStatusD />} />
         <Route path="settings" element={<SettingsD />} />
         <Route path="*" element={<Navigate to="/employee/dashboard" replace />} />
@@ -1282,6 +1286,7 @@ function DesktopShell({
     { label: "Dashboard", path: "/employee/dashboard", icon: LayoutDashboard },
     { label: "Campaigns", path: "/employee/campaigns", icon: Megaphone },
     { label: "Reports", path: "/employee/reports", icon: FileBarChart },
+    { label: "Email", path: "/employee/email", icon: Mail },
     { label: "Sync Status", path: "/employee/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/employee/settings", icon: Settings },
   ];
@@ -1400,6 +1405,7 @@ function MobileShell({
     { label: "Home", path: "/employee/dashboard", icon: LayoutDashboard },
     { label: "Campaigns", path: "/employee/campaigns", icon: Megaphone },
     { label: "Reports", path: "/employee/reports", icon: FileBarChart },
+    { label: "Email", path: "/employee/email", icon: Mail },
     { label: "Sync", path: "/employee/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/employee/settings", icon: Settings },
   ];
@@ -1431,6 +1437,7 @@ function MobileShell({
             <Route path="clients/:clientId" element={<ClientPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
             <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="email" element={<EmailCenter />} />
             <Route path="sync-status" element={<SyncStatusM />} />
             <Route path="settings" element={<SettingsM onLogout={handleLogout} />} />
             <Route path="*" element={<Navigate to="/employee/dashboard" replace />} />

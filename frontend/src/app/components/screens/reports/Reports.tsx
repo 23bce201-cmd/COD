@@ -1,3 +1,4 @@
+// Reports tab for generating analytics reports, downloading exports, and emailing report PDFs.
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
@@ -36,6 +37,7 @@ import {
   YAxis,
 } from "recharts";
 import { useAuth } from "../../../context/AuthContext";
+import { ReportEmailComposer } from "./ReportEmailComposer";
 
 interface AnalyticsRow {
   client_name?: string;
@@ -547,6 +549,7 @@ export function Reports() {
   const bestRoasPlatform = [...platformMetrics].sort((a, b) => b.roas - a.roas)[0];
   const bestCplPlatform = [...platformMetrics].filter(platform => platform.leads > 0).sort((a, b) => a.cpl - b.cpl)[0];
   const topLeadCampaignName = shortenLabel(topLeadCampaigns[0]?.campaign || "No lead data", 28);
+  const selectedBuilderRange = getDateRange(selectedDateRange);
 
   async function handleGenerateReport(
     type: string,
@@ -1241,6 +1244,13 @@ export function Reports() {
           </div>
         </div>
 
+        <ReportEmailComposer
+          clientId={activeReport.clientId || null}
+          from={activeReport.from}
+          to={activeReport.to}
+          title={activeReport.title}
+        />
+
         {renderReportBody()}
 
         {false && (
@@ -1601,6 +1611,13 @@ export function Reports() {
               </button>
             </div>
 
+            <ReportEmailComposer
+              clientId={selectedClient || null}
+              from={selectedBuilderRange.from}
+              to={selectedBuilderRange.to}
+              title="Custom Performance Report"
+              compact
+            />
           </div>
         </div>
 

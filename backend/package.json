@@ -10,7 +10,9 @@
         "migrate": "node db/migrate.js",
         "migrate:keycloak": "node db/run_004_migration.js",
         "migrate:keycloak:cleanup": "node db/run_005_migration.js",
-        "migrate:manager-role": "node db/run_006_migration.js"
+        "migrate:manager-role": "node db/run_006_migration.js",
+        "migrate:sent-emails": "node db/run_010_migration.js",
+        "migrate:gmail-connections": "node db/run_011_migration.js"
     },
     "dependencies": {
         "cors": "^2.8.5",
@@ -18,6 +20,7 @@
         "express": "^4.21.0",
         "express-async-errors": "^3.1.1",
         "express-rate-limit": "^7.4.1",
+        "googleapis": "^144.0.0",
         "helmet": "^8.0.0",
         "jose": "^6.2.3",
         "multer": "^1.4.5-lts.1",

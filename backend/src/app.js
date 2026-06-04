@@ -11,6 +11,8 @@ import reportRoutes from './routes/reports.js';
 import syncRoutes from './routes/sync.js';
 import userRoutes from './routes/users.js';
 import assignmentRoutes from './routes/assignments.js';
+import emailRoutes from './routes/email.js';
+import { handleGmailOAuthCallback } from './controllers/reportEmails.js';
 
 import { verifyToken } from './middleware/verifyToken.js';
 import { scopeGuard, requireRole } from './middleware/scopeGuard.js';
@@ -41,6 +43,9 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Google redirects here without app auth headers; the one-time OAuth state maps it to the user.
+app.get('/api/reports/email/gmail/callback', handleGmailOAuthCallback);
+
 // ─── Protected Routes ───────────────────────────────────────
 const protectedRouter = express.Router();
 protectedRouter.use(verifyToken);
@@ -57,6 +62,7 @@ protectedRouter.use('/metrics', metricRoutes);
 protectedRouter.use('/dashboard', dashboardRoutes);
 protectedRouter.use('/charts', chartRoutes);
 protectedRouter.use('/reports', reportRoutes);
+protectedRouter.use('/email', emailRoutes);
 protectedRouter.use('/users', userRoutes);
 
 app.use('/api', protectedRouter);

@@ -1,3 +1,4 @@
+// Admin dashboard shell with navigation routes, including Reports and Email automation tabs.
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router";
 import {
@@ -29,6 +30,7 @@ import {
   FileBarChart,
   LayoutDashboard,
   LogOut,
+  Mail,
   Megaphone,
   Menu,
   RefreshCw,
@@ -42,6 +44,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "../../../context/AuthContext";
 import { Reports } from "../reports/Reports";
+import { EmailCenter } from "../email/EmailCenter";
 import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
 import { TeamAccess } from "../team/TeamAccess";
@@ -1846,6 +1849,7 @@ function AdminContentRoutes({
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage clients={clients} assignments={assignments} />} />
         <Route path="managers" element={<ManagersPage users={users} assignments={assignments} clients={clients} campaigns={campaigns} loading={loading} search={search} />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="email" element={<EmailCenter />} />
         <Route path="sync-status" element={mobile ? <SyncStatusM /> : <SyncStatusD />} />
         <Route path="team-access" element={<TeamAccess />} />
         <Route path="settings" element={mobile ? <SettingsM onLogout={onLogout} /> : <SettingsD />} />
@@ -1893,6 +1897,7 @@ function DesktopShell({
     { label: "Clients", path: "/admin/clients", icon: Users },
     { label: "Campaigns", path: "/admin/campaigns", icon: Megaphone },
     { label: "Reports", path: "/admin/reports", icon: FileBarChart },
+    { label: "Email", path: "/admin/email", icon: Mail },
     { label: "Sync Status", path: "/admin/sync-status", icon: RefreshCw },
     { label: "Team & Access", path: "/admin/team-access", icon: ShieldCheck },
     { label: "Settings", path: "/admin/settings", icon: Settings },
@@ -2010,6 +2015,7 @@ function MobileShell({
     { label: "Home", path: "/admin/dashboard", icon: LayoutDashboard },
     { label: "Clients", path: "/admin/clients", icon: Users },
     { label: "Managers", path: "/admin/managers", icon: UserRound },
+    { label: "Email", path: "/admin/email", icon: Mail },
     { label: "Settings", path: "/admin/settings", icon: Settings },
   ];
 
