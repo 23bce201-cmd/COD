@@ -14,6 +14,7 @@ import assignmentRoutes from './routes/assignments.js';
 import emailRoutes from './routes/email.js';
 import { handleGmailOAuthCallback } from './controllers/reportEmails.js';
 import kanbanRoutes from './routes/kanban.js';
+import attendanceRoutes from './routes/attendance.js';
 
 import { verifyToken } from './middleware/verifyToken.js';
 import { scopeGuard, requireRole } from './middleware/scopeGuard.js';
@@ -66,6 +67,7 @@ protectedRouter.use('/reports', reportRoutes);
 protectedRouter.use('/email', emailRoutes);
 protectedRouter.use('/kanban', kanbanRoutes);
 protectedRouter.use('/users', userRoutes);
+protectedRouter.use('/attendance', attendanceRoutes);
 
 app.use('/api', protectedRouter);
 

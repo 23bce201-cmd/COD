@@ -15,7 +15,8 @@
         "migrate:gmail-connections": "node db/run_011_migration.js",
          "migrate:kanban": "node db/run_010_migration.js",
         "migrate:kanban-campaign": "node db/run_011_migration.js",
-        "seed:kanban": "node db/seed_kanban_deals.js"
+        "seed:kanban": "node db/seed_kanban_deals.js",
+        "migrate:attendance": "node db/run_012_migration.js"
     },
     "dependencies": {
         "cors": "^2.8.5",

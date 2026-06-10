@@ -21,6 +21,7 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  Clock,
   Cloud,
   FileBarChart,
   LayoutDashboard,
@@ -38,6 +39,7 @@ import { Reports } from "../reports/Reports";
 import { EmailCenter } from "../email/EmailCenter";
 import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
+import { EmployeeView as AttendanceEmployeeView } from "../attendance/EmployeeView";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
 import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -1251,6 +1253,7 @@ function EmployeeContentRoutes({
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} />} />
         <Route path="reports" element={<Reports />} />
         <Route path="email" element={<EmailCenter />} />
+        <Route path="attendance" element={<AttendanceEmployeeView />} />
         <Route path="sync-status" element={<SyncStatusD />} />
         <Route path="settings" element={<SettingsD />} />
         <Route path="*" element={<Navigate to="/employee/dashboard" replace />} />
@@ -1287,6 +1290,7 @@ function DesktopShell({
     { label: "Campaigns", path: "/employee/campaigns", icon: Megaphone },
     { label: "Reports", path: "/employee/reports", icon: FileBarChart },
     { label: "Email", path: "/employee/email", icon: Mail },
+    { label: "Attendance", path: "/employee/attendance", icon: Clock },
     { label: "Sync Status", path: "/employee/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/employee/settings", icon: Settings },
   ];
@@ -1406,6 +1410,7 @@ function MobileShell({
     { label: "Campaigns", path: "/employee/campaigns", icon: Megaphone },
     { label: "Reports", path: "/employee/reports", icon: FileBarChart },
     { label: "Email", path: "/employee/email", icon: Mail },
+    { label: "Attendance", path: "/employee/attendance", icon: Clock },
     { label: "Sync", path: "/employee/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/employee/settings", icon: Settings },
   ];
@@ -1438,6 +1443,7 @@ function MobileShell({
             <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} />} />
             <Route path="reports" element={<Reports />} />
             <Route path="email" element={<EmailCenter />} />
+            <Route path="attendance" element={<AttendanceEmployeeView />} />
             <Route path="sync-status" element={<SyncStatusM />} />
             <Route path="settings" element={<SettingsM onLogout={handleLogout} />} />
             <Route path="*" element={<Navigate to="/employee/dashboard" replace />} />

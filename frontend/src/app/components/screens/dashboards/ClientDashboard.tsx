@@ -26,6 +26,7 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  Clock,
   Cloud,
   Columns3,
   FileBarChart,
@@ -48,6 +49,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { Reports } from "../reports/Reports";
 import { EmailCenter } from "../email/EmailCenter";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
+import { ClientView as AttendanceClientView } from "../attendance/ClientView";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
 import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -2478,6 +2480,7 @@ function ClientContentRoutes({
         <Route path="campaigns/:campaignId" element={<CampaignDetailPage campaigns={campaigns} clientId={clientId} layout={layout} setLayout={setLayout} />} />
         <Route path="reports" element={<Reports />} />
         <Route path="email" element={<EmailCenter />} />
+        <Route path="attendance" element={<AttendanceClientView />} />
         <Route path="sync-status" element={mobile ? <SyncStatusM /> : <SyncStatusD />} />
         <Route path="*" element={<Navigate to="/client/dashboard" replace />} />
       </Routes>
@@ -2516,6 +2519,7 @@ function DesktopShell({
     { label: "Campaigns", path: "/client/campaigns", icon: Megaphone, count: campaigns.length },
     { label: "Reports", path: "/client/reports", icon: FileBarChart },
     { label: "Email", path: "/client/email", icon: Mail },
+    { label: "Attendance", path: "/client/attendance", icon: Clock },
     { label: "Sync Status", path: "/client/sync-status", icon: RefreshCw },
   ];
 
@@ -2642,6 +2646,7 @@ function MobileShell({
     { label: "Campaigns", path: "/client/campaigns", icon: BarChart3 },
     { label: "Reports", path: "/client/reports", icon: FileBarChart },
     { label: "Email", path: "/client/email", icon: Mail },
+    { label: "Attendance", path: "/client/attendance", icon: Clock },
     { label: "Sync", path: "/client/sync-status", icon: RefreshCw },
   ];
 

@@ -25,6 +25,7 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  Clock,
   Cloud,
   FileBarChart,
   Kanban as KanbanIcon,
@@ -45,6 +46,7 @@ import { EmailCenter } from "../email/EmailCenter";
 import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
 import { KanbanBoard } from "../kanban/KanbanBoard";
+import { ManagerView as AttendanceManagerView } from "../attendance/ManagerView";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
 import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -1283,6 +1285,7 @@ function ManagerContentRoutes({
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage clients={clients} clientsLoading={loading} />} />
         <Route path="reports" element={<Reports />} />
         <Route path="email" element={<EmailCenter />} />
+        <Route path="attendance" element={<AttendanceManagerView />} />
         <Route path="sync-status" element={mobile ? <SyncStatusM /> : <SyncStatusD />} />
         <Route path="settings" element={mobile ? <SettingsM onLogout={onLogout} /> : <SettingsD />} />
         <Route path="clients" element={<Navigate to="/manager/dashboard" replace />} />
@@ -1321,6 +1324,7 @@ function DesktopShell({
     { label: "Kanban", path: "/manager/kanban", icon: KanbanIcon },
     { label: "Reports", path: "/manager/reports", icon: FileBarChart },
     { label: "Email", path: "/manager/email", icon: Mail },
+    { label: "Attendance", path: "/manager/attendance", icon: Clock },
     { label: "Sync Status", path: "/manager/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/manager/settings", icon: Settings },
   ];
@@ -1468,6 +1472,7 @@ function MobileShell({
     { label: "Board", path: "/manager/kanban", icon: KanbanIcon },
     { label: "Reports", path: "/manager/reports", icon: FileBarChart },
     { label: "Email", path: "/manager/email", icon: Mail },
+    { label: "Attendance", path: "/manager/attendance", icon: Clock },
     { label: "Sync", path: "/manager/sync-status", icon: RefreshCw },
     { label: "Settings", path: "/manager/settings", icon: Settings },
   ];

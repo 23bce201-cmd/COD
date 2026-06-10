@@ -26,6 +26,7 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
+  Clock,
   Cloud,
   FileBarChart,
   Kanban as KanbanIcon,
@@ -50,6 +51,7 @@ import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
 import { TeamAccess } from "../team/TeamAccess";
 import { KanbanBoard } from "../kanban/KanbanBoard";
+import { AdminView as AttendanceAdminView } from "../attendance/AdminView";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
 import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -1856,6 +1858,7 @@ function AdminContentRoutes({
         <Route path="email" element={<EmailCenter />} />
         <Route path="sync-status" element={mobile ? <SyncStatusM /> : <SyncStatusD />} />
         <Route path="team-access" element={<TeamAccess />} />
+        <Route path="attendance" element={<AttendanceAdminView />} />
         <Route path="settings" element={mobile ? <SettingsM onLogout={onLogout} /> : <SettingsD />} />
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
@@ -1903,6 +1906,7 @@ function DesktopShell({
     { label: "Campaigns", path: "/admin/campaigns", icon: Megaphone },
     { label: "Reports", path: "/admin/reports", icon: FileBarChart },
     { label: "Email", path: "/admin/email", icon: Mail },
+    { label: "Attendance", path: "/admin/attendance", icon: Clock },
     { label: "Sync Status", path: "/admin/sync-status", icon: RefreshCw },
     { label: "Team & Access", path: "/admin/team-access", icon: ShieldCheck },
     { label: "Settings", path: "/admin/settings", icon: Settings },
@@ -2021,6 +2025,7 @@ function MobileShell({
     { label: "Clients", path: "/admin/clients", icon: Users },
     { label: "Board", path: "/admin/kanban", icon: KanbanIcon },
     { label: "Managers", path: "/admin/managers", icon: UserRound },
+    { label: "Attendance", path: "/admin/attendance", icon: Clock },
     { label: "Email", path: "/admin/email", icon: Mail },
     { label: "Settings", path: "/admin/settings", icon: Settings },
   ];
