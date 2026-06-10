@@ -82,6 +82,7 @@ function text(doc, value, x, y, options = {}) {
             align: options.align,
             lineGap: options.lineGap,
             ellipsis: options.ellipsis,
+            lineBreak: false,
         });
 }
 
@@ -468,7 +469,7 @@ async function renderClientReportPdf(clientId, from, to, options = {}, attachDoc
     const p = { left: 36, top: 36, width: 769.89 };
 
     const doc = new PDFDocument({
-        margin: 36,
+        margins: { top: 36, left: 36, right: 36, bottom: 15 },
         size: 'A4',
         layout: 'landscape',
     });
@@ -548,9 +549,9 @@ async function renderClientReportPdf(clientId, from, to, options = {}, attachDoc
         { label: 'Leads', x: 616, w: 48, value: row => count(row.leads), align: 'right' },
         { label: 'Conv.', x: 678, w: 48, value: row => count(row.conversions), align: 'right' },
         { label: 'CTR', x: 738, w: 32, value: row => `${row.ctr.toFixed(1)}%`, align: 'right' },
-    ], campaignRows.slice(0, 9), p.left, 370, p.width, 25);
+    ], campaignRows.slice(0, 6), p.left, 370, p.width, 25);
 
-    if (campaignRows.length > 9) {
+    if (campaignRows.length > 6) {
         doc.addPage();
         drawHeader(doc, 'Campaign Detail Continued', `${client.name} | ${from} to ${to}`);
         drawTable(doc, 'Campaign Performance Detail', [
@@ -563,7 +564,7 @@ async function renderClientReportPdf(clientId, from, to, options = {}, attachDoc
             { label: 'Leads', x: 616, w: 48, value: row => count(row.leads), align: 'right' },
             { label: 'Conv.', x: 678, w: 48, value: row => count(row.conversions), align: 'right' },
             { label: 'CTR', x: 738, w: 32, value: row => `${row.ctr.toFixed(1)}%`, align: 'right' },
-        ], campaignRows.slice(9, 27), p.left, 86, p.width, 25);
+        ], campaignRows.slice(6, 23), p.left, 86, p.width, 25);
     }
 
     doc.end();
