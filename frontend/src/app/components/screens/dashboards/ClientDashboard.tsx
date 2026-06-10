@@ -44,6 +44,7 @@ import {
   SplitSquareHorizontal,
   X,
 } from "lucide-react";
+import { NotificationPanel } from "./RoleDashboardTools";
 import { toast } from "sonner";
 import { useAuth } from "../../../context/AuthContext";
 import { Reports } from "../reports/Reports";
@@ -2604,10 +2605,7 @@ function DesktopShell({
               <Button type="button" variant="ghost" size="sm" onClick={clearSelection}>Clear</Button>
             </div>
           )}
-          <button type="button" className="relative text-slate-500 cursor-pointer hover:text-slate-800 transition-colors" aria-label="Notifications">
-            <Bell size={16} />
-            {!loading && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full" style={{ background: DANGER }} />}
-          </button>
+          <NotificationPanel role="client" />
           <div className="flex items-center gap-2 border-l border-slate-200 pl-4 ml-1">
             <Avatar name={user?.name || clientName} size={28} />
             <span className="text-slate-700 font-medium" style={{ fontSize: 12 }}>{user?.name || "Client"}</span>
@@ -2665,7 +2663,7 @@ function MobileShell({
               Compare
             </Button>
           )}
-          <Bell size={15} className="text-slate-500" />
+          <NotificationPanel role="client" />
           <button type="button" onClick={logout} className="flex items-center gap-1 text-slate-500" aria-label="Sign out">
             <LogOut size={14} />
           </button>
