@@ -27,6 +27,7 @@ import {
   ChevronUp,
   Cloud,
   FileBarChart,
+  Kanban as KanbanIcon,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -43,6 +44,7 @@ import { Reports } from "../reports/Reports";
 import { EmailCenter } from "../email/EmailCenter";
 import { SettingsD, SettingsM } from "../settings/Settings";
 import { SyncStatusD, SyncStatusM } from "../integrations/SyncStatus";
+import { KanbanBoard } from "../kanban/KanbanBoard";
 import { PageTransition, TableSkeleton, useDelayedLoading } from "../../ui/LoadingSkeletons";
 import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -397,8 +399,8 @@ function ManagerBreadcrumbs({ clients, campaigns }: { clients: ManagerClient[]; 
   const client = clients.find((item) => item.id === clientId);
   const campaign = campaigns.find((item) => item.id === campaignId);
 
-  if (parts[1] === "reports" || parts[1] === "sync-status" || parts[1] === "settings") {
-    const label = parts[1] === "sync-status" ? "Sync Status" : parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+  if (parts[1] === "kanban" || parts[1] === "reports" || parts[1] === "sync-status" || parts[1] === "settings") {
+    const label = parts[1] === "sync-status" ? "Sync Status" : parts[1] === "kanban" ? "Kanban Board" : parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
     return (
       <Breadcrumb>
         <BreadcrumbList className="text-slate-500" style={{ fontSize: 12 }}>
@@ -1275,6 +1277,7 @@ function ManagerContentRoutes({
     <PageTransition sectionKey={location.pathname}>
       <Routes>
         <Route path="dashboard" element={<ManagerOverview clients={clients} campaigns={campaigns} loading={loading} search={search} />} />
+        <Route path="kanban" element={<KanbanBoard search={search} />} />
         <Route path="campaigns/compare" element={<RoleCampaignComparisonPage campaigns={campaigns} selectedIds={selectedIds} apiFetch={apiFetch} buildDetailPath={(campaignId) => withManagerId(`/api/campaigns/${campaignId}`, user?.id)} backPath="/manager/dashboard" onClear={onClearCompare} />} />
         <Route path="clients/:clientId" element={<ClientPage clients={clients} campaigns={campaigns} clientsLoading={loading} search={search} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage clients={clients} clientsLoading={loading} />} />
@@ -1315,6 +1318,7 @@ function DesktopShell({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navItems: Array<{ label: string; path: string; icon: React.FC<{ size?: number; className?: string }> }> = [
     { label: "Dashboard", path: "/manager/dashboard", icon: LayoutDashboard },
+    { label: "Kanban", path: "/manager/kanban", icon: KanbanIcon },
     { label: "Reports", path: "/manager/reports", icon: FileBarChart },
     { label: "Email", path: "/manager/email", icon: Mail },
     { label: "Sync Status", path: "/manager/sync-status", icon: RefreshCw },
@@ -1461,6 +1465,7 @@ function MobileShell({
   const tabs = [
     { label: "Home", path: "/manager/dashboard", icon: LayoutDashboard },
     { label: "Clients", path: firstClientPath, icon: UserRound },
+    { label: "Board", path: "/manager/kanban", icon: KanbanIcon },
     { label: "Reports", path: "/manager/reports", icon: FileBarChart },
     { label: "Email", path: "/manager/email", icon: Mail },
     { label: "Sync", path: "/manager/sync-status", icon: RefreshCw },
