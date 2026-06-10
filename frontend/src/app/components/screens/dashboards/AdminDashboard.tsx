@@ -76,6 +76,7 @@ import {
   CampaignCompareBar,
   CompareCheckbox,
   CustomizableMetricGrid,
+  NotificationPanel,
   RoleCampaignComparisonPage,
   roleCompareCampaigns,
   useCampaignCompareSelection,
@@ -1974,10 +1975,7 @@ function DesktopShell({
           </div>
           <AdminBreadcrumbs clients={clients} campaigns={campaigns} />
           <div className="flex-1" />
-          <button type="button" className="relative text-slate-500 cursor-pointer hover:text-slate-800 transition-colors" aria-label="Notifications">
-            <Bell size={16} />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full" style={{ background: DANGER }} />
-          </button>
+          <NotificationPanel role="admin" />
           <div className="flex items-center gap-2 border-l border-slate-200 pl-4 ml-1">
             <Avatar name={user?.name || "Admin"} accent={PRIMARY} size={28} />
             <span className="text-slate-700 font-medium" style={{ fontSize: 12 }}>{user?.name || "Admin"}</span>
@@ -2040,7 +2038,7 @@ function MobileShell({
           <span className="font-bold text-slate-800" style={{ fontSize: 12 }}>CloudCRM</span>
         </button>
         <div className="flex items-center gap-2.5">
-          <Bell size={15} className="text-slate-500" />
+          <NotificationPanel role="admin" />
           <button type="button" onClick={handleLogout} className="flex items-center gap-1 text-slate-500" aria-label="Sign out">
             <LogOut size={14} />
           </button>

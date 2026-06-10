@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import {
   CartesianGrid,
@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ArrowDownRight, ArrowUpRight, ChevronDown, ChevronUp, Settings2, SplitSquareHorizontal, X } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Bell, BellRing, Check, CheckCheck, ChevronDown, ChevronUp, Settings2, SplitSquareHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "../../ui/card";
 import { Button } from "../../ui/button";
@@ -562,4 +562,283 @@ export function RoleCampaignComparisonPage({
 
 export function roleCompareCampaigns(campaigns: ComparableCampaign[], selectedIds: string[]) {
   return campaigns.filter((campaign) => selectedIds.includes(campaign.id));
+}
+
+// ─── Notification Panel ──────────────────────────────────────────────────────
+
+type NotifCategory = "alert" | "info" | "success";
+
+type Notification = {
+  id: string;
+  title: string;
+  body: string;
+  time: string;
+  read: boolean;
+  category: NotifCategory;
+};
+
+const ADMIN_NOTIFICATIONS: Notification[] = [
+  { id: "n1", title: "New Manager Registered", body: "John Doe has registered and is pending approval.", time: "10m ago", read: false, category: "info" },
+  { id: "n2", title: "High Platform Spend", body: "Global spend across all clients exceeded $50k today.", time: "1h ago", read: false, category: "alert" },
+  { id: "n3", title: "System Maintenance", body: "Scheduled maintenance in 2 days at 2 AM UTC.", time: "5h ago", read: false, category: "info" },
+  { id: "n4", title: "Weekly Summary Ready", body: "Admin performance summary for last week is generated.", time: "1d ago", read: true, category: "success" },
+];
+
+const MANAGER_NOTIFICATIONS: Notification[] = [
+  { id: "n1", title: "Budget threshold reached", body: "Meridian Travel Co. is at 92% of monthly budget.", time: "2m ago", read: false, category: "alert" },
+  { id: "n2", title: "Campaign paused", body: "\"Summer Splash\" was automatically paused due to low ROAS.", time: "18m ago", read: false, category: "alert" },
+  { id: "n3", title: "New campaign assigned", body: "You have been assigned to oversee \"Q3 Growth Push\" for TechNova.", time: "3h ago", read: false, category: "info" },
+  { id: "n4", title: "Client onboarded", body: "BlueSky Retail has completed onboarding successfully.", time: "2d ago", read: true, category: "success" },
+];
+
+const EMPLOYEE_NOTIFICATIONS: Notification[] = [
+  { id: "n1", title: "New Task Assigned", body: "Please review ad copy for the 'Holiday Special' campaign.", time: "15m ago", read: false, category: "info" },
+  { id: "n2", title: "ROAS milestone hit", body: "\"Brand Awareness EU\" exceeded 4.5× ROAS — great work!", time: "Yesterday", read: false, category: "success" },
+  { id: "n3", title: "Ad Rejected", body: "Google Ads rejected 2 creatives for policy violation.", time: "2h ago", read: false, category: "alert" },
+  { id: "n4", title: "Weekly Report", body: "Your weekly performance metrics are ready to view.", time: "3d ago", read: true, category: "info" },
+];
+
+const CLIENT_NOTIFICATIONS: Notification[] = [
+  { id: "n1", title: "Campaign Launched", body: "Your \"Summer Splash\" campaign is now live!", time: "1h ago", read: false, category: "success" },
+  { id: "n2", title: "Report ready", body: "Your May performance report is ready to download.", time: "3h ago", read: false, category: "info" },
+  { id: "n3", title: "Action Required", body: "Please approve the updated budget for next month.", time: "1d ago", read: false, category: "alert" },
+  { id: "n4", title: "Weekly Update", body: "Your campaigns generated 145 leads this week.", time: "4d ago", read: true, category: "success" },
+];
+
+function getNotificationsByRole(role?: string): Notification[] {
+  switch (role) {
+    case "admin": return ADMIN_NOTIFICATIONS;
+    case "manager": return MANAGER_NOTIFICATIONS;
+    case "employee": return EMPLOYEE_NOTIFICATIONS;
+    case "client": return CLIENT_NOTIFICATIONS;
+    default: return MANAGER_NOTIFICATIONS;
+  }
+}
+
+const CATEGORY_COLORS: Record<NotifCategory, { dot: string; bg: string }> = {
+  alert:   { dot: DANGER,   bg: "#FFF1F2" },
+  info:    { dot: PRIMARY,  bg: "#EEF2FF" },
+  success: { dot: SUCCESS,  bg: "#ECFDF5" },
+};
+
+function useClickOutside(ref: React.RefObject<HTMLElement | null>, handler: () => void) {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || ref.current.contains(event.target as Node)) return;
+      handler();
+    };
+    document.addEventListener("mousedown", listener);
+    document.addEventListener("touchstart", listener);
+    return () => {
+      document.removeEventListener("mousedown", listener);
+      document.removeEventListener("touchstart", listener);
+    };
+  }, [ref, handler]);
+}
+
+export function NotificationPanel({ role }: { role?: string }) {
+  const [open, setOpen] = useState(false);
+  const initialNotifications = useMemo(() => getNotificationsByRole(role), [role]);
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(panelRef, () => setOpen(false));
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markRead = (id: string) => {
+    setNotifications((current) =>
+      current.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllRead = () => {
+    setNotifications((current) => current.map((n) => ({ ...n, read: true })));
+  };
+
+  return (
+    <div ref={panelRef} style={{ position: "relative" }}>
+      {/* Bell trigger */}
+      <button
+        type="button"
+        id="notification-bell"
+        onClick={() => setOpen((v) => !v)}
+        className="relative text-slate-500 cursor-pointer hover:text-slate-800 transition-colors"
+        aria-label="Notifications"
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        {unreadCount > 0 ? <BellRing size={16} className="animate-[wiggle_1s_ease-in-out]" /> : <Bell size={16} />}
+        {unreadCount > 0 && (
+          <span
+            className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full text-white font-bold"
+            style={{
+              width: unreadCount > 9 ? 16 : 14,
+              height: unreadCount > 9 ? 16 : 14,
+              fontSize: 8,
+              background: DANGER,
+              lineHeight: 1,
+            }}
+          >
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div
+          id="notification-panel"
+          role="dialog"
+          aria-label="Notifications panel"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 10px)",
+            right: 0,
+            width: 340,
+            background: "#fff",
+            border: `1px solid ${BORDER}`,
+            borderRadius: 14,
+            boxShadow: "0 8px 32px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.06)",
+            zIndex: 9999,
+            overflow: "hidden",
+            animation: "notif-in 0.18s cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
+          <style>{`
+            @keyframes notif-in {
+              from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+              to   { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes wiggle {
+              0%,100% { transform: rotate(0deg); }
+              20% { transform: rotate(-14deg); }
+              40% { transform: rotate(14deg); }
+              60% { transform: rotate(-8deg); }
+              80% { transform: rotate(8deg); }
+            }
+          `}</style>
+
+          {/* Header */}
+          <div
+            className="flex items-center justify-between px-4 py-3 border-b border-slate-100"
+            style={{ background: "#FAFBFF" }}
+          >
+            <div className="flex items-center gap-2">
+              <Bell size={14} className="text-slate-500" />
+              <span className="text-slate-800 font-semibold" style={{ fontSize: 13 }}>
+                Notifications
+              </span>
+              {unreadCount > 0 && (
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-white font-bold"
+                  style={{ fontSize: 9, background: DANGER }}
+                >
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={markAllRead}
+              disabled={unreadCount === 0}
+              className="flex items-center gap-1 text-slate-400 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              style={{ fontSize: 11 }}
+              aria-label="Mark all as read"
+            >
+              <CheckCheck size={13} />
+              All read
+            </button>
+          </div>
+
+          {/* Notification list */}
+          <div style={{ maxHeight: 360, overflowY: "auto" }}>
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-slate-400" style={{ fontSize: 13 }}>
+                No notifications
+              </div>
+            ) : (
+              notifications.map((notif) => {
+                const colors = CATEGORY_COLORS[notif.category];
+                return (
+                  <div
+                    key={notif.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 10,
+                      padding: "11px 16px",
+                      background: notif.read ? "#fff" : colors.bg,
+                      borderBottom: `1px solid ${BORDER}`,
+                      transition: "background 0.2s",
+                      cursor: notif.read ? "default" : "pointer",
+                    }}
+                    onClick={() => !notif.read && markRead(notif.id)}
+                    role={notif.read ? undefined : "button"}
+                    tabIndex={notif.read ? undefined : 0}
+                    onKeyDown={(e) => {
+                      if (!notif.read && (e.key === "Enter" || e.key === " ")) markRead(notif.id);
+                    }}
+                    aria-label={notif.read ? undefined : `Mark "${notif.title}" as read`}
+                  >
+                    {/* Dot */}
+                    <div style={{ paddingTop: 3, flexShrink: 0 }}>
+                      <span
+                        style={{
+                          display: "block",
+                          width: 7,
+                          height: 7,
+                          borderRadius: "50%",
+                          background: notif.read ? "#CBD5E1" : colors.dot,
+                          transition: "background 0.2s",
+                        }}
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p
+                        className="text-slate-800 font-semibold truncate"
+                        style={{ fontSize: 12, marginBottom: 2 }}
+                      >
+                        {notif.title}
+                      </p>
+                      <p className="text-slate-500" style={{ fontSize: 11, lineHeight: 1.5 }}>
+                        {notif.body}
+                      </p>
+                      <p className="text-slate-400 mt-1" style={{ fontSize: 10 }}>
+                        {notif.time}
+                      </p>
+                    </div>
+
+                    {/* Read indicator */}
+                    {!notif.read && (
+                      <div style={{ paddingTop: 2, flexShrink: 0 }}>
+                        <Check size={12} className="text-indigo-400" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Footer */}
+          <div
+            className="flex items-center justify-center px-4 py-2.5 border-t border-slate-100"
+            style={{ background: "#FAFBFF" }}
+          >
+            <button
+              type="button"
+              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+              style={{ fontSize: 11 }}
+              onClick={() => setOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
