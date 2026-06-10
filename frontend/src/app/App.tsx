@@ -9,6 +9,8 @@ import { PageSpinner } from "./components/ui/LoadingSkeletons";
 import { Toaster } from "./components/ui/sonner";
 
 import { ReactNode } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 /**
  * Route guard — checks authentication and role access.
@@ -130,11 +132,13 @@ function AppRoutes() {
 
 export default function App() {
     return (
-        <AuthProvider>
-            <BrowserRouter>
-                <AppRoutes />
-                <Toaster />
-            </BrowserRouter>
-        </AuthProvider>
+        <DndProvider backend={HTML5Backend}>
+            <AuthProvider>
+                <BrowserRouter>
+                    <AppRoutes />
+                    <Toaster />
+                </BrowserRouter>
+            </AuthProvider>
+        </DndProvider>
     );
 }

@@ -38,6 +38,7 @@ import {
 } from "recharts";
 import { useAuth } from "../../../context/AuthContext";
 import { ReportEmailComposer } from "./ReportEmailComposer";
+import { CustomGraphBuilder } from "./CustomGraphBuilder";
 
 interface AnalyticsRow {
   client_name?: string;
@@ -1250,6 +1251,8 @@ export function Reports() {
           to={activeReport.to}
           title={activeReport.title}
         />
+
+        <CustomGraphBuilder data={activeReport.data} />
 
         {renderReportBody()}
 

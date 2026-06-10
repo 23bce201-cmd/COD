@@ -69,6 +69,7 @@ import {
   roleCompareCampaigns,
   useCampaignCompareSelection,
 } from "./RoleDashboardTools";
+import { CustomGraphBuilder } from "../reports/CustomGraphBuilder";
 
 type EmployeeCampaign = {
   id: string;
@@ -809,6 +810,10 @@ function Overview({
         <h2 className="text-slate-800 font-semibold mb-3" style={{ fontSize: 13 }}>Assigned Clients</h2>
         <ClientCards campaigns={campaigns} metricsByCampaign={metricsByCampaign} />
       </div>
+
+      <div className="mt-6">
+        <CustomGraphBuilder data={campaigns} />
+      </div>
     </div>
   );
 }
@@ -868,20 +873,24 @@ function CampaignTable({
   title = "Campaigns",
   selectedIds = [],
   onToggleCompare,
+  search = "",
 }: {
   campaigns: EmployeeCampaign[];
   clientAccentColor?: string;
   title?: string;
   selectedIds?: string[];
   onToggleCompare?: (campaignId: string) => void;
+  search?: string;
 }) {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortKey, setSortKey] = useState<CampaignSortKey>("clicks");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
     return campaigns
       .filter((campaign) => statusFilter === "all" || campaign.status === statusFilter)
+      .filter((campaign) => !q || campaign.name.toLowerCase().includes(q) || (campaign.platform || "").toLowerCase().includes(q) || (campaign.client_name || "").toLowerCase().includes(q))
       .sort((a, b) => {
         const direction = sortDirection === "asc" ? 1 : -1;
         const values: Record<CampaignSortKey, [string | number, string | number]> = {
@@ -899,7 +908,7 @@ function CampaignTable({
         if (typeof av === "number" && typeof bv === "number") return (av - bv) * direction;
         return String(av).localeCompare(String(bv)) * direction;
       });
-  }, [campaigns, sortDirection, sortKey, statusFilter]);
+  }, [campaigns, search, sortDirection, sortKey, statusFilter]);
 
   const setSort = (key: CampaignSortKey) => {
     if (sortKey === key) {
@@ -1229,6 +1238,7 @@ function EmployeeContentRoutes({
   campaigns,
   metricsByCampaign,
   loading,
+  search,
   onLogout,
   selectedIds,
   onToggleCompare,
@@ -1237,6 +1247,7 @@ function EmployeeContentRoutes({
   campaigns: EmployeeCampaign[];
   metricsByCampaign: Record<string, EmployeeMetric[]>;
   loading: boolean;
+  search: string;
   onLogout: () => void;
   selectedIds: string[];
   onToggleCompare: (campaignId: string) => void;
@@ -1248,7 +1259,7 @@ function EmployeeContentRoutes({
       <Routes>
         <Route path="/" element={<Navigate to="/employee/dashboard" replace />} />
         <Route path="dashboard" element={<Overview campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} />} />
-        <Route path="campaigns" element={loading ? <TableSkeleton cols={8} rows={6} /> : <CampaignTable campaigns={campaigns} title="My Campaigns" selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
+        <Route path="campaigns" element={loading ? <TableSkeleton cols={8} rows={6} /> : <CampaignTable campaigns={campaigns} title="My Campaigns" search={search} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
         <Route path="campaigns/compare" element={<RoleCampaignComparisonPage campaigns={campaigns} selectedIds={selectedIds} localMetricsByCampaign={metricsByCampaign} backPath="/employee/campaigns" onClear={onClearCompare} />} />
         <Route path="clients/:clientId" element={<ClientPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} selectedIds={selectedIds} onToggleCompare={onToggleCompare} />} />
         <Route path="clients/:clientId/campaigns/:campaignId" element={<CampaignDetailPage campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} />} />
@@ -1286,6 +1297,11 @@ function DesktopShell({
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    setSearch("");
+  }, [location.pathname, setSearch]);
+
   const navItems = [
     { label: "Dashboard", path: "/employee/dashboard", icon: LayoutDashboard },
     { label: "Campaigns", path: "/employee/campaigns", icon: Megaphone },
@@ -1373,7 +1389,7 @@ function DesktopShell({
         </div>
 
         <main className="flex-1 p-5 overflow-y-auto relative">
-          <EmployeeContentRoutes campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} onLogout={handleLogout} selectedIds={selectedIds} onToggleCompare={onToggleCompare} onClearCompare={onClearCompare} />
+          <EmployeeContentRoutes campaigns={campaigns} metricsByCampaign={metricsByCampaign} loading={loading} search={search} onLogout={handleLogout} selectedIds={selectedIds} onToggleCompare={onToggleCompare} onClearCompare={onClearCompare} />
           <CampaignCompareBar selectedCampaigns={roleCompareCampaigns(campaigns, selectedIds)} comparePath="/employee/campaigns/compare" onClear={onClearCompare} />
         </main>
       </div>

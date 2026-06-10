@@ -68,6 +68,7 @@ import {
   roleCompareCampaigns,
   useCampaignCompareSelection,
 } from "./RoleDashboardTools";
+import { CustomGraphBuilder } from "../reports/CustomGraphBuilder";
 
 type ManagerClient = {
   id: string;
@@ -709,6 +710,10 @@ function ManagerOverview({
           </div>
         )}
       </section>
+
+      <div className="mt-6">
+        <CustomGraphBuilder data={campaigns} />
+      </div>
     </div>
   );
 }
@@ -1320,6 +1325,11 @@ function DesktopShell({
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    setSearch("");
+  }, [location.pathname, setSearch]);
+
   const navItems: Array<{ label: string; path: string; icon: React.FC<{ size?: number; className?: string }> }> = [
     { label: "Dashboard", path: "/manager/dashboard", icon: LayoutDashboard },
     { label: "Kanban", path: "/manager/kanban", icon: KanbanIcon },

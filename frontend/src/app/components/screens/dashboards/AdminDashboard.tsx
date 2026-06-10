@@ -81,6 +81,7 @@ import {
   roleCompareCampaigns,
   useCampaignCompareSelection,
 } from "./RoleDashboardTools";
+import { CustomGraphBuilder } from "../reports/CustomGraphBuilder";
 
 type AdminClient = {
   id: string;
@@ -1152,6 +1153,10 @@ function AdminOverview({
       </div>
 
       <ClientsTable clients={clients} campaigns={campaigns} assignments={assignments} search={search} loading={loading} />
+
+      <div className="mt-6">
+        <CustomGraphBuilder data={campaigns} />
+      </div>
     </div>
   );
 }
@@ -1894,6 +1899,10 @@ function DesktopShell({
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    setSearch("");
+  }, [location.pathname, setSearch]);
 
   const handleLogout = async () => {
     await logout();
