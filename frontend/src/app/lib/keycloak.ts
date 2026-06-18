@@ -2,8 +2,7 @@ import Keycloak from "keycloak-js";
 
 const authMode = (import.meta.env.VITE_AUTH_MODE || "keycloak").trim();
 
-export const isDevAuthBypass =
-    import.meta.env.DEV && authMode.toLowerCase() === "dev-bypass";
+export const isDevAuthBypass = authMode.toLowerCase() === "dev-bypass";
 
 const hasKeycloakConfig = Boolean(
     import.meta.env.VITE_KEYCLOAK_URL &&
