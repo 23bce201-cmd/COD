@@ -25,7 +25,8 @@ interface AuthContextType {
     apiFetch: (path: string, init?: RequestInit) => Promise<Response>;
 }
 
-const API_ORIGIN = "http://localhost:3001";
+const DEFAULT_API_ORIGIN = import.meta.env.DEV ? "http://localhost:3001" : "";
+const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN || DEFAULT_API_ORIGIN).replace(/\/$/, "");
 const DEV_AUTH_EMAIL_HEADER = "X-Dev-Auth-Email";
 const DEV_AUTH_EMAIL_STORAGE_KEY = "cloudcrm.dev_auth_email";
 const DEV_AUTH_DEFAULT_EMAIL = (import.meta.env.VITE_DEV_AUTH_EMAIL || "").trim();

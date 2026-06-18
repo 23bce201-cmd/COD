@@ -1,0 +1,44 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd frontend && npm install && cd ../backend && npm install && cd ../mock-ads-api && npm install",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/backend/[...path].js": {
+      "maxDuration": 60
+    },
+    "api/mock-ads/[...path].js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/google-ads/:path*",
+      "destination": "/api/mock-ads/api/google-ads/:path*"
+    },
+    {
+      "source": "/api/meta-ads/:path*",
+      "destination": "/api/mock-ads/api/meta-ads/:path*"
+    },
+    {
+      "source": "/api/linkedin-ads/:path*",
+      "destination": "/api/mock-ads/api/linkedin-ads/:path*"
+    },
+    {
+      "source": "/api/twitter-ads/:path*",
+      "destination": "/api/mock-ads/api/twitter-ads/:path*"
+    },
+    {
+      "source": "/mock-ads/:path*",
+      "destination": "/api/mock-ads/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/backend/api/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}

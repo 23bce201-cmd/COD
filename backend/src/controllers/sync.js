@@ -2,7 +2,9 @@ import { query, getClient } from '../services/db.js';
 import { decrypt } from '../services/encryption.js';
 import { uuidParamSchema } from '../validators/clients.js';
 
-const MOCK_API_BASE = process.env.MOCK_ADS_API_URL || 'http://localhost:5000';
+const MOCK_API_BASE =
+    process.env.MOCK_ADS_API_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:4000');
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
